@@ -1,65 +1,39 @@
 package cache
 
-import (
-	"container/list"
-	"sync"
+const (
+	TYPE_LRU = "lru"
 )
 
-type cacheItem struct {
-	key   string
-	value interface{}
+type Cache interface {
+	Set(key string, value any)
+	Get(key string) any
+	Purge()
 }
 
-type Cache struct {
+type CacheBuilder struct {
 	capacity int
-	data     map[string]*list.Element
-	mu       sync.RWMutex
-	list     *list.List
+	ctype    string
 }
 
-func NewCache(size int) *Cache {
-	return &Cache{
-		capacity: size,
-		data:     make(map[string]*list.Element),
-		list:     list.New(),
-	}
+func New(capacity int) *CacheBuilder {
+	return &CacheBuilder{capacity: capacity}
 }
 
-func (c *Cache) Set(key string, value any) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// if the key already exists, update the value and move it to the front.
-	if element, found := c.data[key]; found {
-		c.list.MoveToFront(element)
-		element.Value.(*cacheItem).value = value
-		return
+func (cb *CacheBuilder) Build() Cache {
+	if cb.capacity <= 0 {
+		panic("cache size <= 0")
 	}
 
-	// check for capcity and do eviction if needed
-	if c.list.Len() == c.capacity {
-		backElement := c.list.Back()
-		if backElement != nil {
-			c.list.Remove(backElement)
-			delete(c.data, backElement.Value.(*cacheItem).key)
-		}
+	switch cb.ctype {
+	case TYPE_LRU:
+		return newLRUCache(cb.capacity)
+	default:
+		panic("unknown type " + cb.ctype)
 	}
 
-	newElement := c.list.PushFront(&cacheItem{key, value})
-	c.data[key] = newElement
 }
 
-func (c *Cache) Get(key string) any {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	if c.capacity == 0 || c.capacity == -1 {
-		return nil
-	}
-
-	if element, found := c.data[key]; found {
-		c.list.MoveToFront(element)
-		return element.Value.(*cacheItem).value
-	}
-	return nil
+func (cb *CacheBuilder) LRU() *CacheBuilder {
+	cb.ctype = TYPE_LRU
+	return cb
 }
