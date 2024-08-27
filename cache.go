@@ -50,6 +50,8 @@ func (c *Cache) Set(key string, value interface{}) {
 }
 
 func (c *Cache) Get(key string) any {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	if element, found := c.data[key]; found {
 		c.list.MoveToFront(element)
 		return element.Value.(*cacheItem).value
