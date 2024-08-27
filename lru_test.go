@@ -121,7 +121,6 @@ func TestConcurrentAccess(t *testing.T) {
 
 	wg.Wait()
 
-	// Verify some values
 	for i := 900; i < 1000; i++ {
 		val := cache.Get(strconv.Itoa(i))
 		if val != i*i && val != nil {
@@ -147,5 +146,30 @@ func TestZeroCapacity(t *testing.T) {
 
 	if val := cache.Get("A"); val != nil {
 		t.Errorf("Expected Get(A) to return nil for negative capacity cache, got %d", val.(int))
+	}
+}
+
+func TestPurge(t *testing.T) {
+	cache := newLRUCache(3)
+
+	cache.Set("A", 1)
+	cache.Set("B", 2)
+
+	if val := cache.Get("A"); val != 1 {
+		t.Errorf("Expected Get(A) to return 1, got %d", val.(int))
+	}
+
+	if val := cache.Get("B"); val != 2 {
+		t.Errorf("Expected Get(B) to return 2, got %d", val.(int))
+	}
+
+	cache.Purge()
+
+	if val := cache.Get("A"); val != nil {
+		t.Errorf("Expected Get(A) to return nil, got %d", val.(int))
+	}
+
+	if val := cache.Get("B"); val != nil {
+		t.Errorf("Expected Get(B) to return nil, got %d", val.(int))
 	}
 }

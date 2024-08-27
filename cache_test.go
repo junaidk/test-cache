@@ -16,3 +16,13 @@ func TestBasicCache(t *testing.T) {
 		t.Errorf("Expected Get(B) to return 2, got %d", val.(int))
 	}
 }
+
+func TestBuildWithOutType(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("the code did not panic")
+		}
+	}()
+
+	New(2).Build()
+}
