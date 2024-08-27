@@ -129,3 +129,23 @@ func TestConcurrentAccess(t *testing.T) {
 		}
 	}
 }
+
+func TestNegativeCapacity(t *testing.T) {
+	cache := NewCache(-1)
+
+	cache.Set("A", 1)
+
+	if val := cache.Get("A"); val != nil {
+		t.Errorf("Expected Get(A) to return nil for negative capacity cache, got %d", val.(int))
+	}
+}
+
+func TestZeroCapacity(t *testing.T) {
+	cache := NewCache(0)
+
+	cache.Set("A", 1)
+
+	if val := cache.Get("A"); val != nil {
+		t.Errorf("Expected Get(A) to return nil for negative capacity cache, got %d", val.(int))
+	}
+}

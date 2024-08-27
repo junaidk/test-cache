@@ -25,7 +25,7 @@ func NewCache(size int) *Cache {
 	}
 }
 
-func (c *Cache) Set(key string, value interface{}) {
+func (c *Cache) Set(key string, value any) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -52,6 +52,11 @@ func (c *Cache) Set(key string, value interface{}) {
 func (c *Cache) Get(key string) any {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+
+	if c.capacity == 0 || c.capacity == -1 {
+		return nil
+	}
+
 	if element, found := c.data[key]; found {
 		c.list.MoveToFront(element)
 		return element.Value.(*cacheItem).value
